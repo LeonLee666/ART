@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
         buf[len-1] = '\0';
 
         uintptr_t val = (uintptr_t)art_search(&t, (unsigned char*)buf, len);
-        printf("Line: %d Val: %d Str: %s\n", line,val, buf);
+        printf("Line: %ld Val: %ld Str: %s\n", line,val, buf);
         line++;
     }
 
