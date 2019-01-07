@@ -475,6 +475,9 @@ static void add_child16(art_node16 *n, art_node **ref, unsigned char c, void *ch
     }
 }
 
+/*
+ * 给node4节点add child的时候，如果超过4叉，则把n扩容到node16
+ */
 static void add_child4(art_node4 *n, art_node **ref, unsigned char c, void *child) {
     if (n->n.num_children < 4) {
         int idx;
@@ -503,7 +506,7 @@ static void add_child4(art_node4 *n, art_node **ref, unsigned char c, void *chil
         copy_header((art_node*)new_node, (art_node*)n);
         *ref = (art_node*)new_node;
         free(n);
-        add_child16(new_node, ref, c, child);
+        add_child16(new_node, ref, c, child);   //变成add_child16 了
     }
 }
 
@@ -545,7 +548,9 @@ static int prefix_mismatch(const art_node *n, const unsigned char *key, int key_
     }
     return idx;
 }
-
+/*
+ * 递归查找公共前缀，并插入
+ */
 static void* recursive_insert(art_node *n, art_node **ref, const unsigned char *key, int key_len, void *value, int depth, int *old) {
     // If we are at a NULL node, inject a leaf
     if (!n) {
@@ -575,7 +580,7 @@ static void* recursive_insert(art_node *n, art_node **ref, const unsigned char *
         int longest_prefix = longest_common_prefix(l, l2, depth);
         new_node->n.partial_len = longest_prefix;
         memcpy(new_node->n.partial, key+depth, min(MAX_PREFIX_LEN, longest_prefix));
-        // Add the leafs to the new node4
+        // Add the leafs to the new node4， 注意add child的时候，new_node 可能会扩容
         *ref = (art_node*)new_node;
         add_child4(new_node, ref, l->key[depth+longest_prefix], SET_LEAF(l));
         add_child4(new_node, ref, l2->key[depth+longest_prefix], SET_LEAF(l2));
@@ -622,6 +627,7 @@ RECURSE_SEARCH:;
     // Find a child to recurse to
     art_node **child = find_child(n, key[depth]);
     if (child) {
+        //把child作为root往下递归遍历
         return recursive_insert(*child, child, key, key_len, value, depth+1, old);
     }
 
